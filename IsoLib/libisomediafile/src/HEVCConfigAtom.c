@@ -108,7 +108,7 @@ static MP4Err serialize(struct MP4Atom *s, char *buffer)
     u32 count;
     err = MP4GetListEntryCount(self->arrays[array_index].nalList, &count);
     if(err) goto bail;
-    x = (self->arrays[array_index].array_completeness << 7) | self->arrays[array_index].NALtype;
+    x = (self->arrays[array_index].array_completeness << 7) | self->arrays[array_index].NAL_unit_type;
     PUT8_V(x);
 
     PUT16_V(count);
@@ -230,7 +230,7 @@ static MP4Err createFromInputStream(MP4AtomPtr s, MP4AtomPtr proto, MP4InputStre
   {
     GET8_V(x);
     self->arrays[array_index].array_completeness = (x & 0x80) ? 1 : 0;
-    self->arrays[array_index].NALtype            = x & 0x3f;
+    self->arrays[array_index].NAL_unit_type            = x & 0x3f;
     err = MP4MakeLinkedList(&self->arrays[array_index].nalList);
     if(err) goto bail;
 
@@ -272,7 +272,7 @@ static MP4Err addParameterSet(struct ISOHEVCConfigAtom *self, MP4Handle ps, u32 
 
   for(i = 0; i < 8; i++)
   {
-    if(self->arrays[i].NALtype == nalu)
+    if(self->arrays[i].NAL_unit_type == nalu)
     {
       u32 nalCount = 0;
       err          = MP4GetListEntryCount(self->arrays[i].nalList, &nalCount);
@@ -304,7 +304,7 @@ static MP4Err getParameterSet(struct ISOHEVCConfigAtom *self, MP4Handle ps, u32 
 
   for(i = 0; i < self->numOfArrays; i++)
   {
-    if(self->arrays[i].NALtype == nalu)
+    if(self->arrays[i].NAL_unit_type == nalu)
     {
       err = MP4GetListEntry(self->arrays[i].nalList, index - 1, (char **)&b);
       if(err) goto bail;
@@ -349,7 +349,7 @@ MP4Err MP4CreateHEVCConfigAtom(ISOHEVCConfigAtomPtr *outAtom)
   {
     err = MP4MakeLinkedList(&self->arrays[i].nalList);
     if(err) goto bail;
-    self->arrays[i].NALtype            = 32 + i;
+    self->arrays[i].NAL_unit_type            = 32 + i;
     self->arrays[i].array_completeness = 1;
   }
 
